@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>TryhackMe: Kenobi</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width-device-width, initial-scale-1">
+
+    <!--  Import the webpage's stylesheet  -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BioRhyme:wght@800&family=Space+Mono&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <link href="../style.css" rel="stylesheet">
+</head>
+
+<body style="background-color: darkgrey;">
+    <headear>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-end">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../img/Brand.jpg" width="30" height="30" alt="" class="rounded"></a>
+            <ul class="nav ">
+                <li class="nav-item active">
+                    <a class="nav-link" href="../index.html">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../thm/index.html">TryhackMe</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../index.html">Acerca de</a>
+                </li>
+        </nav>
+        <div class="cover d-flex justify-content-end align-items-start flex-column p-5">
+            <h1>RC1991</h1>
+            <p>Writeups para CTF's</p>
+            <form action="../thm/index.html" method="get" id="Index"></form>
+            <button class="btn btn-dark" type="submit" form="Index" value="Submit">TryhackMe</button>
+        </div>
+    </headear>
+
+    <section class="redaccion">
+        <div class="container mt-5 mb-5" style="background-color: whitesmoke;">
+            <h1>Kenobi</h1>
+            <hr>
+            <img class="rounded mx-auto d-block mb-3" src="img/kenobi/kenobi_cards.PNG"
+                style="width: 538px;height: 327px;">
+            <p>La maquina Kenobi es un equipo linux que cuenta con servidor FTP vulnerable que permite obtener
+                archivos locales del equipo remoto.
+            </p>
+            <p>Informacion Basica</p>
+            <ul>
+                <li><b>OS: </b>Linux</li>
+                <li><b>IP: </b>10.10.135.252</li>
+            </ul>
+            <h3>Enumeracion</h3>
+            <hr>
+            <p>Realizando un escaneo con Nmap se detectan multiples servicios en ejecucion entre los cuales
+                destacan el servicio FTP ejecutando sobre el puerto 21 y el servicio SMB.
+            </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>nmap 10.10.135.252 -p21,22,111,80,139,445,2049,36405,38797,43311,53597 --min-rate=5400 -sV -sC -n -Pn</span></code>
+            </div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_nmap.png">
+            <p>Validando los directorios compartidas por el servicio Samba se observa un archivo llamado "log.txt" el
+                cual indica que una llave para
+                el acceso via ssh ha sido generada para el usaurio "kenobi" </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>smbclient -L 10.10.135.252 -N</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_smb.png">
+            <p>Ingreanso al directorio compartido y descargando archivo almacenado</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>smbclient //10.10.135.252/anonymous</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_smb_get.png">
+            <P>obteniendo el contenido del archivo Log.txt</P>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>cat log.txt</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_log.png">
+
+            <h3>Explotacion</h3>
+            <hr>
+            <p>El servicio FTP cuenta con una vulnerabiliad que permite obtener archivos locales del servidor remoto,
+                gracias al contenido del archivo log.txt del servicio samba sabermos la ruta de la llave para el
+                servicio SSH que se ha generado,
+                usando esta llave podemos acceder al servidor con privilegios limitados.
+            </p>
+            <p>Buscando exploit</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>searchsploit  proFTPD 1.3.5</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_exp.png" style="width: 700px;">
+            <p>obtenemos el exploit</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>searchsploit -x linux/remote/36742.txt</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_exp_get.png">
+            <p>Coenctamos con el servicio FTP remoto y obtenemos la llave ssh generada en la ruta
+                "/home/kenobi/.ssh/id_rsa"</p>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_exploit.png">
+            <p>Validamos el contenido del archivo id_rsa y se le otrogan los permisos requeridos para poder ejecutar el
+                archivo</p>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_ssh.png">
+            <p>Conectando con el servidor remoto usando SSH</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                    <span>ssh kenobi@10.10.135.252 -i id_rsa</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_ssh_con.png">
+            <h3>Escalacion de Privilegios</h3>
+            <hr>
+            <p>El equipo cuenta con multiples binarios con permisos de SUID, en especial un archivo
+                no comun llamado menu en la ruta "/usr/bin/menu", ejecutando el comando strings sobre dicho binario
+                se observa que ejecuta el comando curl llamandolo desde una ruta relativa, esto permite
+                que se pueda realizar un ataque de tipo binary path hijacking.
+            </p>
+            <p>ubicando binario con permisos de SUID</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>find / -perm /4000 -type f 2>/dev/null</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_find.png">
+            <p>Ejecutando comando Strings</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>strings /usr/bin/menu</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_strings.png">
+            <P>Para realizar este ataque primero se requiere actualizar el PATH de la variable de ambiente para agregar
+                la ruta del home del usuario kenobi
+                para que busque el comando "curl" dentro de esta ruta para ser ejecutado.
+            </P>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>echo $PATH</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_path.png" style="width: 700px;">
+            <p>Ya con el PATH configurado se genera un binario que genere una conexion reversa con el nombre "curl",
+                una ves ejecutado el binario "/usr/bin/menu" al usar una ruta relativa sobre el binario "curl" ejecutara
+                nuestro archivo malisioso.
+            </p>
+            <p>Crecion y ejecucion del binario</p>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_pirv.png" style="width: 700px;">
+            <p>Obteniendo conexion reversa</p>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_rev.png">
+            <h3>Flags</h3>
+            <hr>
+            <p>User</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>cat user.txt ; ip ad | grep global<br>
+                    d0b0f3f53b6caa532a83915e19224899</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_user.png">
+
+            <P>root</P>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>cat root.txt ; ip ad | grep global<br>
+                    177b3cd8562289f37382721c28381f02</span></code></div>
+            <img class="rounded mb-3" src="img/kenobi/kenobi_root.png">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </div>
+
+    </section>
+</body>

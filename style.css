@@ -1,0 +1,140 @@
+body {
+    margin:0em;
+}
+
+
+h1,h2 {
+    font-family: 'BioRhyme', serif;
+}
+
+h3 {
+    font-family: 'Space Mono', monospace;
+    font-weight: bold;
+}
+
+p, pre, li {
+    font-family: 'Space Mono', monospace;
+}
+
+/* Configuracion para Imagen portada*/
+.cover {
+    height: 400px;
+    background-image: url(img/portada.jpg);
+    color: white;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(0,0,0,0.5);
+    background-blend-mode: darken;
+}
+
+.nmap{
+    background-size: cover;
+    background-position: center;
+    height: 800px;
+}
+
+/* Configuracion para tarjetas presentacion*/
+
+.card {
+    border: 0 !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);
+}
+
+.cover-small {
+    height: 200px;
+    background-blend-mode: normal;
+}
+
+.card-title {
+    min-height: 3rem;
+}
+
+.principal {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+}
+
+.card-text {
+    min-height: 10 rem;
+}
+
+.col {
+    flex-shrink:0
+}
+
+.card-footer {
+    background-color: black;
+    text-align: center;  
+}
+
+
+/* Configuracion para Slider imagenes*/
+
+.product-stripe, .slider {
+    overflow-x: scroll;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.stripe-container , .slider-container {
+    display: flex;
+}
+
+.slider {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.slider-container {
+    transform: translateX(0);
+    animation: slider 15s infinite;
+}
+
+.image-container {
+    width: 100%;
+    padding-top: 56.25%;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    
+}
+
+/* Animaciones con CSS*/
+@keyframes slider {
+    0%{
+        transform: translateX(0);
+    }
+
+    20%{
+        transform: translateX(0);
+    }
+
+    25%{
+        transform: translateX(-100%);
+    }
+
+    45%{
+        transform: translateX(-100%);
+    }
+
+    50%{
+        transform: translateX(-200%);
+    }
+
+    70%{
+        transform: translateX(-200%);
+    }
+
+    75%{
+        transform: translateX(-300%);
+    }
+
+    95%{
+        transform: translateX(-300%);
+    }
+
+    100%{
+        transform: translateX(0);
+    }
+
+}
