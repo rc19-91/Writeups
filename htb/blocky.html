@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Hack the Box: Blocky</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width-device-width, initial-scale-1">
+
+    <!--  Import the webpage's stylesheet  -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BioRhyme:wght@800&family=Space+Mono&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <link href="../style.css" rel="stylesheet">
+</head>
+
+<body style="background-color: darkgrey;">
+    <headear>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-end">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../img/Brand.jpg" width="30" height="30" alt="" class="rounded"></a>
+            <ul class="nav ">
+                <li class="nav-item active">
+                    <a class="nav-link" href="../index.html">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../htb/index.html">HackTheBox</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../index.html">Acerca de</a>
+                </li>
+        </nav>
+        <div class="cover d-flex justify-content-end align-items-start flex-column p-5">
+            <h1>RC1991</h1>
+            <p>Writeups para CTF's</p>
+            <form action="../htb/index.html" method="get" id="Index"></form>
+            <button class="btn btn-dark" type="submit" form="Index" value="Submit">Hack the Box</button>
+        </div>
+    </headear>
+
+    <section class="redaccion">
+        <div class="container mt-5 mb-5" style="background-color: whitesmoke;">
+            <h1>Blocky</h1>
+            <hr>
+            <img class="rounded mx-auto d-block mb-3" src="img/blocky/blocky_card.png"
+                style="width: 538px;height: 327px;">
+            <p>La maquina Blocky es una equipo linux que cuenta con multiples servicios en ejecucion, el servicio
+                principal es una pagina webpage
+                que cuenta con directorios ocultos, realizando un fuzzion sobre el servicio web se logra encontrar una
+                directorio con informacion sensible.
+            </p>
+            <p>Informacion Basica</p>
+            <ul>
+                <li><b>OS: </b>Linux</li>
+                <li><b>IP: </b>10.10.10.37</li>
+            </ul>
+            <h3>Enumeracion</h3>
+            <hr>
+            <p>
+                Escaneo completo sobe el equipo remoto
+            </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>nmap 10.10.10.37 -p- --open -n --min-rate 5400 -sC -sV -T5 -oN BasicScan_10.10.10.37.txt</span></code>
+            </div><img class="rounded mx-auto  mb-3 desbordado" src="img/blocky/blocky_nmap.png">
+            <p>
+                El principal enfoque estara centrado en el servicio web, por lo que la enumeracion estara enfocada a los
+                servicios web
+            </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>http://10.10.10.37/</span></code>
+            </div><img class="rounded mx-auto  mb-3 desbordado" src="img/blocky/blocky_url.png">
+            <p> El servicio web es una pagina simple montada en Wordpress version 4.8, con apoyo de las herramientas
+                whatweb, wpscan y gobuster podermos obtener una mayor informacion sobre el servicio. </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>whatweb -a3 http://10.10.10.37/</span></code>
+            </div><img class="rounded mx-auto  mb-3 desbordado" src="img/blocky/blocky_whatweb.png">
+            <p>la herramienta "wpscan" nos ayudara a escanear el servicio web en busca de informacion relevante como
+                plugins,
+                nombres de usaurios, themas, etc..
+            </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span> wpscan --url http://10.10.10.37/  -e ap --plugins-detection mixed -o wpscan_10.10.10.37_fullvp.txt</span></code>
+            </div>
+            <p>Wordpress version</p>
+            <img class="rounded mx-auto  mb-3 desbordado" src="img/blocky/blocky_wp_version.png">
+
+            <p>Wordpress users<br>
+                <img class="rounded mx-auto  mb-3 desbordado" src="img/blocky/blocky_wp_users.png">
+                <br>Datos:<br>
+                Usuarios: notch
+            </p>
+
+            <p>Wordpress plugins</p>
+            <img class="rounded mx-auto mb-3 desbordado" src="img/blocky/blocky_plugins.png">
+
+            <p>Wordpress themes</p>
+            <img class="rounded mx-auto  mb-3 desbordado" src="img/blocky/blocky_wp_thems.png">
+
+
+            <p> Gobuster buscara por directorios ocultos </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>gobuster dir -u http://10.10.10.37 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x txt,php,html -t 200 -o gob_10.10.10.37.txt -k -e 2>/dev/null</span></code>
+            </div><img class="rounded mx-auto mb-3 desbordado" src="img/blocky/blocky_gobuster.png">
+            <p> Se pueden observar multiples directorios entre los que resalta el directorio llamado "Plugins", dentro
+                de este directorio se encuentran dos archivos, el archivo que contiene informacion sensible se llama
+                "BlockyCore.jar"
+            </p>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>http://10.10.10.37/plugins/</span></code>
+            </div><img class="rounded mx-auto  mb-3 desbordado" src="img/blocky/blocky_plugins.png">
+
+
+            <h3>Explotacion</h3>
+            <hr>
+            <p> Para ver el contenido de los archivos .jar se puede utilizar la herramienta "jd-gui", una ves se tenga
+                la herramienta se puede validar
+                el contenido del archivo "BlockyCore.jar"
+            <ul>
+                <li>Instalacion de la herramienta "jd-gui"</li>
+                <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                        <span>sudo apt install jd-gui -y</span></code>
+                </div><img class="rounded mx-auto  mb-3" style="width: 600px;" src="img/blocky/blocky_install.png">
+
+                <li>Obteniendo archvio "BlockyCore.jar</li>
+                <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                        <span>wget http://10.10.10.37/plugins/files/BlockyCore.jar</span></code>
+                </div><img class="rounded mx-auto  mb-3" style="width: 600px;" src="img/blocky/blocky_jd-gui.png">
+
+                <li>Validando contenido</li>
+                <img class="rounded mx-auto mb-3" style="width: 600px;" src="img/blocky/blocky_contenido.png">
+                <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                        <span>public class BlockyCore {<br>
+                            public String sqlHost = "localhost";<br>
+                            public String sqlUser = "root";<br>
+                            public String sqlPass = "8YsqfCTnvxAUeduzjNSXe22";<br>
+                          </span></code></div>
+            </ul>
+            Combinando el usuario obtenido en wordpress con el password del usaurio root se puede acceder al equipo
+            remoto
+            usando el servicio ssh<br>
+            Datos:<br>
+            <ul>
+                <li><b>User: </b>notch</li>
+                <li><b>pass: </b>8YsqfCTnvxAUeduzjNSXe22</li>
+            </ul>
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>ssh notch@10.10.10.37</span></code>
+            </div><img class="rounded mx-auto  mb-3 " src="img/blocky/blocky_ssh.png"></p>
+
+            <h3>Escalacion de Privilegios</h3>
+            <hr>
+            <p>El usuario notch tiene permisos para ejecutar comandos utilizando el comando "sudo"
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                    <span>sudo -l</span></code>
+            </div><img class="rounded mx-auto  mb-3 desbordado " src="img/blocky/blocky_sudo.png"><br>
+            Ejecutamos el comando "sudo su" utilizando las credenciales del usaurio notch
+            <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                <span>sudo su</span></code>
+            </div><img class="rounded mx-auto  mb-3 " src="img/blocky/blocky_sudo_su.png"><br></p>
+
+            <h3>Flags</h3>
+            <hr>
+            <p>
+                User:<br>
+                <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                    <span> cat /home/notch/user.txt ; ip ad | grep inet<br>
+                        59fee0977fb60b8a0bc6e41e751f3cd5</span></code>
+                </div><img class="rounded mx-auto  mb-3 " src="img/blocky/blocky_user.png"><br></p>
+                root:<br>
+                <div class="container border border-success mb-3" style="background-color: #fdf6e3;"><code>
+                    <span> cat /root/root.txt ; ip ad | grep inet<br>
+                        0a9694a5b4d272c694679f7860f1cd5f</span></code>
+                </div><img class="rounded mx-auto  mb-3 " src="img/blocky/blocky_root.png"><br></p>
+            </p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </section>
+</body>
