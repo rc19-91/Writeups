@@ -41,7 +41,9 @@ p, pre, li {
 }
 
 .desbordado {
-    width: 700px;
+    max-width: 100%;
+    height: auto;
+    
 }
 
 .cover-small {
@@ -101,6 +103,11 @@ p, pre, li {
     background-position: center;
     flex-shrink: 0;
     
+}
+
+.redaccion {
+    width: 95%;
+    background-color: whitesmoke;
 }
 
 /* Animaciones con CSS*/
